@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Page {
+  id        String        @id @default(cuid())
+  slug      String        @unique
+  title     String
+  status    String        @default("draft")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  sections  Section[]
+  seo       SeoMeta?
+  versions  PageVersion[]
+}
+
+model Section {
+  id         String   @id @default(cuid())
+  pageId     String
+  page       Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  key        String
+  type       String
+  content    String
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([pageId, key])
+}
+
+model SeoMeta {
+  id              String  @id @default(cuid())
+  pageId          String  @unique
+  page            Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+  ogImage         String?
+  canonicalUrl    String?
+}
+
+model PageVersion {
+  id        String   @id @default(cuid())
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  version   Int
+  data      String
+  createdAt DateTime @default(now())
+  createdBy String?
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String
+  alt       String?
+  size      Int?
+  mimeType  String?
+  createdAt DateTime @default(now())
+}
+
+model Blog {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  excerpt      String?
+  content      String
+  featuredImg  String?
+  category     String?
+  tags         String?
+  status       String   @default("draft")
+  readTime     Int?
+  metaTitle    String?
+  metaDesc     String?
+  metaKeywords String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Service {
+  id     String  @id @default(cuid())
+  title  String
+  desc   String
+  icon   String  @default("TrendingUp")
+  active Boolean @default(true)
+}
+
+model Portfolio {
+  id             String   @id @default(cuid())
+  title          String
+  client         String
+  clientLogo     String?
+  technologies   String?
+  problem        String?
+  solution       String?
+  results        String?
+  metrics        String?
+  clientReview   String?
+  clientName     String?
+  clientRole     String?
+  clientAvatar   String?
+  rating         Int      @default(5)
+  active         Boolean  @default(true)
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  phone     String?
+  company   String?
+  date      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  date      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  password    String
+  role        String
+  permissions String?
+  avatar      String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Role {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  permissions String?
+  description String?
+}

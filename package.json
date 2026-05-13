@@ -1,0 +1,33 @@
+{
+  "name": "nexora-digital",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.3",
+    "@prisma/adapter-libsql": "^7.8.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^5.22.0",
+    "dotenv": "^17.4.2",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.400.0",
+    "next": "latest",
+    "pg": "^8.20.0",
+    "prisma": "^5.22.0",
+    "quill": "^2.0.3",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-quill": "^2.0.0",
+    "sql.js": "^1.14.1",
+    "tailwindcss": "^3.4.19"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.14"
+  }
+}
