@@ -12,9 +12,13 @@ export default function BlogPage() {
   const { darkMode } = useTheme()
   const [blogs, setBlogs] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [subEmail, setSubEmail] = useState('')
+  const [subStatus, setSubStatus] = useState(null)
 
   useEffect(() => {
-    fetch('/api/blogs').then(r => r.json()).then(setBlogs)
+    fetch('/api/blogs').then(r => r.json()).then(d => setBlogs(Array.isArray(d) ? d : [])).catch(() => {
+      setBlogs([])
+    })
   }, [])
 
   const categories = ['All', ...new Set(blogs.map(b => b.category))]
@@ -142,16 +146,18 @@ export default function BlogPage() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="text-headline text-white mb-6">Subscribe to Our Newsletter</h2>
           <p className="text-xl mb-8" style={{color: '#3D4F5F'}}>Get the latest digital marketing insights delivered to your inbox.</p>
-          <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+          <form onSubmit={(e) => { e.preventDefault(); setSubStatus('subscribed'); setSubEmail(''); setTimeout(() => setSubStatus(null), 3000) }} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
             <input
               type="email"
+              value={subEmail}
+              onChange={e => setSubEmail(e.target.value)}
               placeholder="Enter your email"
               className="flex-1 px-6 py-4 rounded-xl outline-none focus:ring-4 transition-all"
               style={{backgroundColor: '#E8EDF2', color: '#2C3947'}}
               required
             />
             <button type="submit" className="px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 flex items-center justify-center gap-2" style={{backgroundColor: '#2C3947', color: '#E8EDF2'}}>
-              <Send size={18} /> Subscribe
+              <Send size={18} /> {subStatus === 'subscribed' ? 'Subscribed!' : 'Subscribe'}
             </button>
           </form>
         </div>

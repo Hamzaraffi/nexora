@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useTheme } from './ThemeProvider'
-import { Facebook, Twitter, Linkedin, Instagram, ArrowRight, Mail, Phone, MapPin } from 'lucide-react'
+import { Facebook, Twitter, Linkedin, Instagram, ArrowRight, Mail, Phone, MapPin, Youtube } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 export default function Footer() {
   const { darkMode } = useTheme()
@@ -10,6 +11,41 @@ export default function Footer() {
   const textPrimary = '#E8EDF2'
   const textSecondary = '#94A3B8'
   const accent = '#C2A56D'
+  
+  const [settings, setSettings] = useState({
+    siteName: 'Nexora',
+    email: 'hello@nexora.com',
+    phone: '+1 (555) 123-4567',
+    address: 'San Francisco, CA 94102',
+    facebook: '',
+    twitter: '',
+    instagram: '',
+    linkedin: '',
+    youtube: '',
+    tiktok: ''
+  })
+
+  useEffect(() => {
+    const cached = localStorage.getItem('nexora_settings')
+    if (cached) {
+      try { setSettings(JSON.parse(cached)) } catch (e) {}
+    }
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(data => {
+        setSettings(data)
+        localStorage.setItem('nexora_settings', JSON.stringify(data))
+      })
+      .catch(() => {})
+  }, [])
+
+  const socialLinks = [
+    { icon: Facebook, key: 'facebook', label: 'Facebook' },
+    { icon: Twitter, key: 'twitter', label: 'Twitter' },
+    { icon: Instagram, key: 'instagram', label: 'Instagram' },
+    { icon: Linkedin, key: 'linkedin', label: 'LinkedIn' },
+    { icon: Youtube, key: 'youtube', label: 'YouTube' }
+  ]
 
   return (
     <footer className="relative overflow-hidden" style={{backgroundColor: bgColor}}>
@@ -29,16 +65,26 @@ export default function Footer() {
                   <span className="text-2xl font-bold" style={{color: '#2C3947'}}>N</span>
                 </div>
               </div>
-              <span className="text-2xl font-bold" style={{color: textPrimary}}>Nexora</span>
+              <span className="text-2xl font-bold" style={{color: textPrimary}}>{settings.siteName}</span>
             </div>
             <p className="mb-6" style={{color: textSecondary, lineHeight: '1.7'}}>
               Transforming brands through strategic digital marketing. We create meaningful connections between businesses and their audiences.
             </p>
             <div className="flex gap-3">
-              {[Facebook, Twitter, Linkedin, Instagram].map((Icon, i) => (
-                <a key={i} href="#" className="w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:scale-110" style={{backgroundColor: 'rgba(194, 165, 109, 0.15)', color: accent}}>
-                  <Icon size={18} />
-                </a>
+              {socialLinks.map(({ icon: Icon, key, label }) => (
+                settings[key] ? (
+                  <a 
+                    key={key} 
+                    href={settings[key]} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-all hover:scale-110" 
+                    style={{backgroundColor: 'rgba(194, 165, 109, 0.15)', color: accent}}
+                    title={label}
+                  >
+                    <Icon size={18} />
+                  </a>
+                ) : null
               ))}
             </div>
           </div>
@@ -64,14 +110,14 @@ export default function Footer() {
             <h4 className="font-bold mb-6" style={{color: textPrimary}}>Services</h4>
             <div className="space-y-4">
               {[
-                'Digital Marketing Strategy',
-                'Search Engine Optimization',
-                'Content Marketing',
-                'Social Media Management',
-                'Brand Development',
+                { label: 'Digital Marketing Strategy', href: '/services' },
+                { label: 'Search Engine Optimization', href: '/services' },
+                { label: 'Content Marketing', href: '/services' },
+                { label: 'Social Media Management', href: '/services' },
+                { label: 'Brand Development', href: '/services' },
               ].map((service) => (
-                <a key={service} href="#" className="block transition-colors hover:text-[#C2A56D]" style={{color: textSecondary}}>
-                  {service}
+                <a key={service.label} href={service.href} className="block transition-colors hover:text-[#C2A56D]" style={{color: textSecondary}}>
+                  {service.label}
                 </a>
               ))}
             </div>
@@ -82,42 +128,44 @@ export default function Footer() {
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <Mail size={20} style={{color: accent, marginTop: '2px'}} />
-                <span style={{color: textSecondary}}>hello@nexora.com</span>
+                <span style={{color: textSecondary}}>{settings.email}</span>
               </div>
               <div className="flex items-start gap-3">
                 <Phone size={20} style={{color: accent, marginTop: '2px'}} />
-                <span style={{color: textSecondary}}>+1 (555) 123-4567</span>
+                <span style={{color: textSecondary}}>{settings.phone}</span>
               </div>
               <div className="flex items-start gap-3">
                 <MapPin size={20} style={{color: accent, marginTop: '2px'}} />
-                <span style={{color: textSecondary}}>San Francisco, CA 94102</span>
+                <span style={{color: textSecondary}}>{settings.address}</span>
               </div>
             </div>
 
             <div className="mt-8 pt-8 border-t" style={{borderColor: 'rgba(232, 237, 242, 0.1)'}}>
               <p className="text-sm mb-4" style={{color: textSecondary}}>Subscribe to our newsletter</p>
-              <div className="flex gap-2">
+              <form onSubmit={(e) => { e.preventDefault(); e.currentTarget.reset() }} className="flex gap-2">
                 <input 
                   type="email" 
+                  name="email"
                   placeholder="Enter your email"
+                  required
                   className="flex-1 px-4 py-3 rounded-lg outline-none transition-all"
                   style={{backgroundColor: 'rgba(232, 237, 242, 0.1)', color: textPrimary, border: '1px solid rgba(232, 237, 242, 0.2)'}}
                 />
-                <button className="px-4 py-3 rounded-lg transition-all hover:scale-105" style={{backgroundColor: accent, color: '#2C3947'}}>
+                <button type="submit" className="px-4 py-3 rounded-lg transition-all hover:scale-105" style={{backgroundColor: accent, color: '#2C3947'}}>
                   <ArrowRight size={20} />
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </div>
 
         <div className="mt-16 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4" style={{borderColor: 'rgba(232, 237, 242, 0.1)'}}>
           <p className="text-sm" style={{color: textSecondary}}>
-            © 2026 Nexora Digital Marketing. All rights reserved.
+            © 2026 {settings.siteName}. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <a href="#" className="text-sm transition-colors hover:text-[#C2A56D]" style={{color: textSecondary}}>Privacy Policy</a>
-            <a href="#" className="text-sm transition-colors hover:text-[#C2A56D]" style={{color: textSecondary}}>Terms of Service</a>
+            <a href="/#contact" className="text-sm transition-colors hover:text-[#C2A56D]" style={{color: textSecondary}}>Privacy Policy</a>
+            <a href="/#contact" className="text-sm transition-colors hover:text-[#C2A56D]" style={{color: textSecondary}}>Terms of Service</a>
           </div>
         </div>
       </div>

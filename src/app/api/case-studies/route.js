@@ -4,12 +4,12 @@ import { defaultPortfolio } from '@/lib/default-data'
 
 export async function GET() {
   try {
-    let portfolio = await kvGet('portfolio')
-    if (!portfolio) {
-      portfolio = defaultPortfolio
-      await kvSet('portfolio', portfolio)
+    let cases = await kvGet('case-studies')
+    if (!cases) {
+      cases = defaultPortfolio
+      await kvSet('case-studies', cases)
     }
-    return NextResponse.json(portfolio)
+    return NextResponse.json(cases)
   } catch (e) {
     return NextResponse.json(defaultPortfolio)
   }
@@ -18,7 +18,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json()
-    let portfolio = await kvGet('portfolio') || [...defaultPortfolio]
+    let cases = await kvGet('case-studies') || [...defaultPortfolio]
     
     const newItem = {
       id: Date.now(),
@@ -26,8 +26,8 @@ export async function POST(request) {
       ...body
     }
     
-    portfolio.unshift(newItem)
-    await kvSet('portfolio', portfolio)
+    cases.unshift(newItem)
+    await kvSet('case-studies', cases)
     
     return NextResponse.json(newItem)
   } catch (e) {
@@ -38,13 +38,13 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     const body = await request.json()
-    let portfolio = await kvGet('portfolio') || [...defaultPortfolio]
+    let cases = await kvGet('case-studies') || [...defaultPortfolio]
     
-    const index = portfolio.findIndex(p => p.id === body.id)
+    const index = cases.findIndex(c => c.id === body.id)
     if (index !== -1) {
-      portfolio[index] = { ...portfolio[index], ...body }
-      await kvSet('portfolio', portfolio)
-      return NextResponse.json(portfolio[index])
+      cases[index] = { ...cases[index], ...body }
+      await kvSet('case-studies', cases)
+      return NextResponse.json(cases[index])
     }
     
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -58,9 +58,9 @@ export async function DELETE(request) {
     const { searchParams } = new URL(request.url)
     const id = parseInt(searchParams.get('id'))
     
-    let portfolio = await kvGet('portfolio') || [...defaultPortfolio]
-    portfolio = portfolio.filter(p => p.id !== id)
-    await kvSet('portfolio', portfolio)
+    let cases = await kvGet('case-studies') || [...defaultPortfolio]
+    cases = cases.filter(c => c.id !== id)
+    await kvSet('case-studies', cases)
     
     return NextResponse.json({ success: true })
   } catch (e) {

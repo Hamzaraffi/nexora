@@ -1,17 +1,27 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion'
 import { Menu, X, Sun, Moon, ArrowRight, Instagram, Linkedin, Twitter, Mail } from 'lucide-react'
 import { useTheme } from './ThemeProvider'
 
-export default function Navigation() {
+export default function Navigation({ navLogo = 'Nexora', navLinks = null }) {
   const { darkMode, toggleDarkMode } = useTheme()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [settings, setSettings] = useState({
+    instagram: '', twitter: '', linkedin: '', email: 'hello@nexora.com'
+  })
   const pathname = usePathname()
   const { scrollYProgress } = useScroll()
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(data => setSettings(data))
+      .catch(() => {})
+  }, [])
 
   if (pathname?.startsWith('/admin')) return null
   
@@ -146,46 +156,76 @@ export default function Navigation() {
                 className="text-xl font-bold tracking-tight hidden sm:block"
                 style={{ color: textPrimary }}
               >
-                Nexora
+                {navLogo}
               </span>
             </Link>
           </div>
 
           
-
-          {/* Right: Nav Links + CTA */}
-          <div className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="relative py-2 text-sm font-medium tracking-wide transition-colors group"
-                style={{ color: pathname === item.href ? textPrimary : textSecondary }}
-              >
-                <span className="relative z-10">{item.label}</span>
-                
-                {/* Gold dot indicator */}
-                <motion.div
-                  className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                  style={{ backgroundColor: accent }}
-                  initial={{ scale: 0 }}
-                  animate={pathname === item.href ? { scale: 1 } : { scale: 0 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-                
-                {/* Underline animation */}
-                <div className="absolute bottom-0 left-0 w-full h-px overflow-hidden">
+          {/* Dynamic Nav Items */}
+          {navLinks ? (
+            <div className="hidden md:flex items-center gap-8">
+              {navLinks.map((item, i) => (
+                <Link
+                  key={i}
+                  href={item.href}
+                  className="relative py-2 text-sm font-medium tracking-wide transition-colors group"
+                  style={{ color: pathname === item.href ? textPrimary : textSecondary }}
+                >
+                  <span className="relative z-10">{item.label}</span>
+                  
                   <motion.div
-                    className="w-full h-full"
+                    className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
                     style={{ backgroundColor: accent }}
-                    initial={{ scaleX: 0, originX: 0 }}
-                    whileHover={{ scaleX: 1 }}
-                    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                    initial={{ scale: 0 }}
+                    animate={pathname === item.href ? { scale: 1 } : { scale: 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
-                </div>
-              </Link>
-            ))}
+                  
+                  <div className="absolute bottom-0 left-0 w-full h-px overflow-hidden">
+                    <motion.div
+                      className="w-full h-full"
+                      style={{ backgroundColor: accent }}
+                      initial={{ scaleX: 0, originX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                    />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="hidden md:flex items-center gap-8">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="relative py-2 text-sm font-medium tracking-wide transition-colors group"
+                  style={{ color: pathname === item.href ? textPrimary : textSecondary }}
+                >
+                  <span className="relative z-10">{item.label}</span>
+                  <motion.div
+                    className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                    style={{ backgroundColor: accent }}
+                    initial={{ scale: 0 }}
+                    animate={pathname === item.href ? { scale: 1 } : { scale: 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
+                  <div className="absolute bottom-0 left-0 w-full h-px overflow-hidden">
+                    <motion.div
+                      className="w-full h-full"
+                      style={{ backgroundColor: accent }}
+                      initial={{ scaleX: 0, originX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                    />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
 
+          <div className="hidden md:flex items-center gap-8">
             <button
               onClick={toggleDarkMode}
               className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:scale-110"
@@ -285,7 +325,7 @@ export default function Navigation() {
                   </div>
                   <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full" style={{ background: 'linear-gradient(135deg, #C2A56D, #D4B87A)' }} />
                 </div>
-                <span className="text-xl font-bold tracking-tight" style={{ color: darkMode ? '#E8EDF2' : '#2C3947' }}>Nexora</span>
+                <span className="text-xl font-bold tracking-tight" style={{ color: darkMode ? '#E8EDF2' : '#2C3947' }}>{navLogo}</span>
               </Link>
               
               <button
@@ -353,18 +393,26 @@ export default function Navigation() {
               </div>
               
               <div className="flex gap-3">
-                {[Instagram, Twitter, Linkedin].map((Icon, i) => (
-                  <a
-                    key={i}
-                    href="#"
-                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:scale-110 hover:bg-[#C2A56D]/10"
-                    style={{ 
-                      backgroundColor: darkMode ? 'rgba(232, 237, 242, 0.08)' : 'rgba(84, 122, 149, 0.08)',
-                      color: textSecondary
-                    }}
-                  >
-                    <Icon size={18} />
-                  </a>
+                {[
+                  { icon: Instagram, key: 'instagram' },
+                  { icon: Twitter, key: 'twitter' },
+                  { icon: Linkedin, key: 'linkedin' }
+                ].map(({ icon: Icon, key }) => (
+                  settings[key] ? (
+                    <a
+                      key={key}
+                      href={settings[key]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:scale-110 hover:bg-[#C2A56D]/10"
+                      style={{ 
+                        backgroundColor: darkMode ? 'rgba(232, 237, 242, 0.08)' : 'rgba(84, 122, 149, 0.08)',
+                        color: textSecondary
+                      }}
+                    >
+                      <Icon size={18} />
+                    </a>
+                  ) : null
                 ))}
               </div>
             </div>

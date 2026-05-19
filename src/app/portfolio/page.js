@@ -12,7 +12,9 @@ export default function PortfolioPage() {
   const [portfolio, setPortfolio] = useState([])
 
   useEffect(() => {
-    fetch('/api/portfolio').then(r => r.json()).then(setPortfolio)
+    fetch('/api/portfolio').then(r => r.json()).then(d => setPortfolio(Array.isArray(d) ? d : [])).catch(() => {
+      setPortfolio([])
+    })
   }, [])
 
   const bgColor = darkMode ? '#1A2634' : '#E8EDF2'

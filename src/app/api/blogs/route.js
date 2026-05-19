@@ -1,50 +1,74 @@
-import data from '../../../lib/db'
+import { NextResponse } from 'next/server'
+import { kvGet, kvSet } from '@/lib/kv-store'
+import { defaultBlogs } from '@/lib/default-data'
 
-export async function GET(request) {
-  return Response.json(data.blogs)
+export async function GET() {
+  try {
+    let blogs = await kvGet('blogs')
+    if (!blogs) {
+      blogs = defaultBlogs
+      await kvSet('blogs', blogs)
+    }
+    return NextResponse.json(blogs)
+  } catch (e) {
+    return NextResponse.json(defaultBlogs)
+  }
 }
 
 export async function POST(request) {
-  const body = await request.json()
-  const newBlog = {
-    id: Date.now().toString(),
-    title: body.title || '',
-    slug: body.slug || body.title?.toLowerCase().replace(/\s+/g, '-') || '',
-    heading: body.heading || '',
-    subHeading: body.subHeading || '',
-    content: body.content || '',
-    excerpt: body.excerpt || '',
-    image: body.image || '',
-    category: body.category || 'General',
-    tags: body.tags || [],
-    metaTitle: body.metaTitle || body.title || '',
-    metaDescription: body.metaDescription || '',
-    metaKeywords: body.metaKeywords || '',
-    readTime: body.readTime || '5 min read',
-    date: new Date().toISOString().split('T')[0],
-    active: true
+  try {
+    const body = await request.json()
+    let blogs = await kvGet('blogs') || [...defaultBlogs]
+    
+    const newBlog = {
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+      date: new Date().toISOString().split('T')[0],
+      published: false,
+      ...body
+    }
+    
+    blogs.unshift(newBlog)
+    await kvSet('blogs', blogs)
+    
+    return NextResponse.json(newBlog)
+  } catch (e) {
+    return NextResponse.json({ error: 'Failed to create blog' }, { status: 500 })
   }
-  data.blogs.push(newBlog)
-  return Response.json(newBlog, { status: 201 })
 }
 
 export async function PUT(request) {
-  const body = await request.json()
-  const index = data.blogs.findIndex(b => b.id === body.id)
-  if (index > -1) {
-    data.blogs[index] = { ...data.blogs[index], ...body }
-    return Response.json(data.blogs[index])
+  try {
+    const body = await request.json()
+    let blogs = await kvGet('blogs') || [...defaultBlogs]
+    
+    const index = blogs.findIndex(b => b.id === body.id || (typeof b.id === 'string' && b.id === body.id))
+    if (index !== -1) {
+      blogs[index] = { ...blogs[index], ...body }
+      await kvSet('blogs', blogs)
+      return NextResponse.json(blogs[index])
+    }
+    
+    return NextResponse.json({ error: 'Blog not found' }, { status: 404 })
+  } catch (e) {
+    return NextResponse.json({ error: 'Failed to update blog' }, { status: 500 })
   }
-  return Response.json({ error: 'Blog not found' }, { status: 404 })
 }
 
 export async function DELETE(request) {
-  const { searchParams } = new URL(request.url)
-  const id = searchParams.get('id')
-  const index = data.blogs.findIndex(b => b.id === id)
-  if (index > -1) {
-    data.blogs.splice(index, 1)
-    return Response.json({ success: true })
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    
+    let blogs = await kvGet('blogs') || [...defaultBlogs]
+    blogs = blogs.filter(b => {
+      const blogId = typeof b.id === 'string' ? b.id : String(b.id)
+      return blogId !== String(id) && b.id !== parseInt(id)
+    })
+    await kvSet('blogs', blogs)
+    
+    return NextResponse.json({ success: true })
+  } catch (e) {
+    return NextResponse.json({ error: 'Failed to delete blog' }, { status: 500 })
   }
-  return Response.json({ error: 'Blog not found' }, { status: 404 })
 }

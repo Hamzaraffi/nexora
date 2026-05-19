@@ -1,0 +1,250 @@
+'use client'
+
+import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function CreateBlog() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [images, setImages] = useState([])
+  const [preview, setPreview] = useState('')
+  const [editorHtml, setEditorHtml] = useState('')
+  const editorRef = useRef(null)
+
+  const [form, setForm] = useState({
+    title: '',
+    slug: '',
+    content: '',
+    author: '',
+    excerpt: '',
+    category: '',
+    tags: '',
+    image: '',
+    published: false
+  })
+
+  function generateSlug(title) {
+    return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+  }
+
+  function handleChange(e) {
+    const { name, value, type, checked } = e.target
+    if (name === 'title' && !form.slug) {
+      setForm({ ...form, [name]: value, slug: generateSlug(value) })
+    } else {
+      setForm({ ...form, [name]: type === 'checkbox' ? checked : value })
+    }
+  }
+
+  async function handleImageUpload(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    setUploading(true)
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setForm({ ...form, image: reader.result })
+      setPreview(reader.result)
+      setUploading(false)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  function execCmd(command, value = null) {
+    document.execCommand(command, false, value)
+    setEditorHtml(editorRef.current.innerHTML)
+    setForm({ ...form, content: editorRef.current.innerHTML })
+  }
+
+  function handleImageAdd(e) {
+    const files = Array.from(e.target.files)
+    files.forEach(file => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const imgHtml = `<img src="${reader.result}" style="max-width:100%;height:auto;border-radius:8px;margin:16px 0;" />`
+        document.execCommand('insertHTML', false, imgHtml)
+        setEditorHtml(editorRef.current.innerHTML)
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    const content = editorRef.current?.innerHTML || form.content
+    setLoading(true)
+    
+    try {
+      const res = await fetch('/api/blogs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          content,
+          images,
+          tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+          date: new Date().toISOString()
+        })
+      })
+      
+      if (res.ok) router.push('/admin/blog')
+    } catch (e) {}
+    setLoading(false)
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <h1 style={{ fontSize: '32px', fontWeight: '700', color: '#1A2634', margin: 0 }}>Create Blog Post</h1>
+          <p style={{ color: '#6B7280', marginTop: '8px' }}>Write a new article for your blog</p>
+        </div>
+        <a href="/admin/blog" style={{ padding: '12px 20px', background: '#E8EDF2', color: '#374151', borderRadius: '10px', textDecoration: 'none', fontWeight: '500', fontSize: '14px' }}>
+          Back to Posts
+        </a>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ background: 'white', borderRadius: '16px', padding: '28px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #E5E7EB' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Title *</label>
+                <input type="text" name="title" value={form.title} onChange={handleChange} required placeholder="Enter post title" style={{ width: '100%', padding: '14px 16px', border: '2px solid #E5E7EB', borderRadius: '10px', fontSize: '15px', boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Slug *</label>
+                <input type="text" name="slug" value={form.slug} onChange={handleChange} required placeholder="post-url-slug" style={{ width: '100%', padding: '14px 16px', border: '2px solid #E5E7EB', borderRadius: '10px', fontSize: '15px', boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Content *</label>
+                <div style={{ border: '2px solid #E5E7EB', borderRadius: '10px', overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', gap: '4px', padding: '10px', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB', flexWrap: 'wrap' }}>
+                    <button type="button" onClick={() => execCmd('bold')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>B</button>
+                    <button type="button" onClick={() => execCmd('italic')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', fontStyle: 'italic', cursor: 'pointer' }}>I</button>
+                    <button type="button" onClick={() => execCmd('underline')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', textDecoration: 'underline', cursor: 'pointer' }}>U</button>
+                    <button type="button" onClick={() => execCmd('strikeThrough')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', textDecoration: 'line-through', cursor: 'pointer' }}>S</button>
+                    <div style={{ width: '1px', background: '#E5E7EB', margin: '0 8px' }} />
+                    <button type="button" onClick={() => execCmd('formatBlock', 'h1')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', cursor: 'pointer' }}>H1</button>
+                    <button type="button" onClick={() => execCmd('formatBlock', 'h2')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', cursor: 'pointer' }}>H2</button>
+                    <button type="button" onClick={() => execCmd('formatBlock', 'h3')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', cursor: 'pointer' }}>H3</button>
+                    <div style={{ width: '1px', background: '#E5E7EB', margin: '0 8px' }} />
+                    <button type="button" onClick={() => execCmd('insertUnorderedList')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', cursor: 'pointer' }}>• List</button>
+                    <button type="button" onClick={() => execCmd('insertOrderedList')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', cursor: 'pointer' }}>1. List</button>
+                    <button type="button" onClick={() => execCmd('justifyLeft')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', cursor: 'pointer' }}>Left</button>
+                    <button type="button" onClick={() => execCmd('justifyCenter')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', cursor: 'pointer' }}>Center</button>
+                    <button type="button" onClick={() => execCmd('justifyRight')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', cursor: 'pointer' }}>Right</button>
+                    <div style={{ width: '1px', background: '#E5E7EB', margin: '0 8px' }} />
+                    <button type="button" onClick={() => execCmd('formatBlock', 'blockquote')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', cursor: 'pointer' }}>Quote</button>
+                    <button type="button" onClick={() => execCmd('removeFormat')} style={{ padding: '8px 12px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '6px', cursor: 'pointer' }}>Clear</button>
+                    <label style={{ padding: '8px 12px', background: '#C2A56D', color: 'white', border: '1px solid #C2A56D', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '16px' }}>🖼️</span> Add Image
+                      <input type="file" accept="image/*" multiple onChange={handleImageAdd} style={{ display: 'none' }} />
+                    </label>
+                  </div>
+                  <div
+                    ref={editorRef}
+                    contentEditable
+                    onInput={() => setEditorHtml(editorRef.current.innerHTML)}
+                    style={{
+                      minHeight: '300px',
+                      padding: '16px',
+                      fontSize: '15px',
+                      lineHeight: '1.7',
+                      outline: 'none',
+                      fontFamily: 'inherit'
+                    }}
+                    dangerouslySetInnerHTML={{ __html: form.content }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Excerpt</label>
+                <textarea name="excerpt" value={form.excerpt} onChange={handleChange} rows={3} placeholder="Brief summary..." style={{ width: '100%', padding: '14px 16px', border: '2px solid #E5E7EB', borderRadius: '10px', fontSize: '15px', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #E5E7EB' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1A2634', marginBottom: '16px' }}>Publish</h3>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', cursor: 'pointer' }}>
+                <input type="checkbox" name="published" checked={form.published} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
+                <span style={{ fontSize: '14px', fontWeight: '500' }}>Publish immediately</span>
+              </label>
+              <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#C2A56D', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+                {loading ? 'Creating...' : 'Create Post'}
+              </button>
+            </div>
+
+            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #E5E7EB' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1A2634', marginBottom: '16px' }}>Details</h3>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#6B7280', marginBottom: '6px' }}>Author</label>
+                <input type="text" name="author" value={form.author} onChange={handleChange} placeholder="Author name" style={{ width: '100%', padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#6B7280', marginBottom: '6px' }}>Category</label>
+                <input type="text" name="category" value={form.category} onChange={handleChange} placeholder="e.g. Marketing" style={{ width: '100%', padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#6B7280', marginBottom: '6px' }}>Tags</label>
+                <input type="text" name="tags" value={form.tags} onChange={handleChange} placeholder="tag1, tag2" style={{ width: '100%', padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+
+            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #E5E7EB' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1A2634', marginBottom: '16px' }}>Featured Image</h3>
+              <div style={{ border: '2px dashed #E5E7EB', borderRadius: '12px', padding: '32px', textAlign: 'center', background: '#FAFAFA', cursor: 'pointer' }}>
+                <input type="file" accept="image/*" onChange={handleImageUpload} id="blog-image-upload" style={{ display: 'none' }} />
+                <label htmlFor="blog-image-upload" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                  {uploading ? <div style={{ fontSize: '32px' }}>⏳</div> : preview || form.image ? (
+                    <div style={{ width: '100%', borderRadius: '8px', overflow: 'hidden' }}>
+                      <img src={preview || form.image} alt="Preview" style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#6B7280' }}>Click to change</div>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: '48px' }}>📷</div>
+                      <div style={{ color: '#6B7280', fontSize: '14px' }}>Click to upload</div>
+                    </>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #E5E7EB' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#1A2634', marginBottom: '16px' }}>Gallery Images</h3>
+              <label style={{ display: 'block', padding: '20px', border: '2px dashed #E5E7EB', borderRadius: '10px', textAlign: 'center', cursor: 'pointer', background: '#FAFAFA' }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🖼️</div>
+                <div style={{ color: '#6B7280', fontSize: '14px', marginBottom: '4px' }}>Add Multiple Images</div>
+                <div style={{ color: '#9CA3AF', fontSize: '12px' }}>Select multiple files</div>
+                <input type="file" accept="image/*" multiple onChange={(e) => {
+                  const files = Array.from(e.target.files)
+                  files.forEach(file => {
+                    const reader = new FileReader()
+                    reader.onloadend = () => {
+                      setImages(prev => [...prev, { id: Date.now() + Math.random(), src: reader.result }])
+                    }
+                    reader.readAsDataURL(file)
+                  })
+                }} style={{ display: 'none' }} />
+              </label>
+              {images.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '16px' }}>
+                  {images.map((img, idx) => (
+                    <div key={img.id} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden' }}>
+                      <img src={img.src} alt="" style={{ width: '100%', height: '80px', objectFit: 'cover' }} />
+                      <button type="button" onClick={() => setImages(prev => prev.filter((_, i) => i !== idx))} style={{ position: 'absolute', top: '4px', right: '4px', width: '20px', height: '20px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '50%', fontSize: '12px', cursor: 'pointer' }}>×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  )
+}

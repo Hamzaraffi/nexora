@@ -18,25 +18,43 @@ export default function Home() {
   const [portfolio, setPortfolio] = useState([])
   const [blogs, setBlogs] = useState([])
   
+  const [cmsData, setCmsData] = useState({ hero: null, features: null, stats: null, cta: null })
+  const [cmsLoaded, setCmsLoaded] = useState(false)
+  
   const containerRef = useRef(null)
   const { scrollYProgress } = useScroll()
-  
   const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 })
 
   useEffect(() => {
-    fetch('/api/portfolio').then(r => r.json()).then(setPortfolio).catch(() => {})
-    fetch('/api/blogs').then(r => r.json()).then(setBlogs).catch(() => {})
+    async function loadCMSData() {
+      try {
+        const res = await fetch('/api/pages?slug=home')
+        if (res.ok) {
+          const data = await res.json()
+          if (data && data.sections) {
+            setCmsData({
+              hero: data.sections.find(s => s.type === 'hero')?.content || null,
+              features: data.sections.find(s => s.type === 'features')?.content || null,
+              stats: data.sections.find(s => s.type === 'stats')?.content || null,
+              cta: data.sections.find(s => s.type === 'cta')?.content || null,
+            })
+          }
+        }
+      } catch (e) {}
+      setCmsLoaded(true)
+    }
+    loadCMSData()
+    
+    fetch('/api/portfolio').then(r => r.json()).then(d => setPortfolio(Array.isArray(d) ? d : [])).catch(() => {})
+    fetch('/api/blogs').then(r => r.json()).then(d => setBlogs(Array.isArray(d) ? d : [])).catch(() => {})
   }, [])
 
   const handleContactSubmit = async (e) => {
     e.preventDefault()
     setFormStatus('sending')
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
+      fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(() => {})
+      const res = await fetch('https://formspree.io/f/xeenpvjw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
       if (res.ok) {
         setFormStatus('success')
         setFormData({ name: '', email: '', service: '', message: '' })
@@ -51,15 +69,37 @@ export default function Home() {
   const textSecondary = darkMode ? '#94A3B8' : '#547A95'
   const accent = '#C2A56D'
 
-  const features = [
-    { icon: Zap, title: 'Fast & Efficient', desc: 'Quick turnaround without compromise' },
-    { icon: Shield, title: 'Transparent', desc: 'Clear reporting always' },
-    { icon: Users, title: 'Dedicated Team', desc: 'Your own support squad' },
+  const heroData = cmsData.hero || {}
+  const navLogo = 'Nexora'
+  const navLinks = [
+    { label: 'Home', href: '/' },
+    { label: 'About', href: '/about' },
+    { label: 'Services', href: '/services' },
+    { label: 'Portfolio', href: '/portfolio' },
+    { label: 'Contact', href: '/contact' }
+  ]
+  const featuresData = cmsData.features || { items: [] }
+  const statsData = cmsData.stats || { items: [] }
+  const ctaData = cmsData.cta || {}
+
+  const heroTitle = heroData.headline || 'Transform Your Digital Presence'
+  const heroSubtitle = heroData.subheadline || 'Strategic digital marketing that drives measurable growth. We don\'t just market—we build lasting connections with your audience.'
+  const heroCta = heroData.ctaText || 'Start Your Project'
+  const features = featuresData.items?.length > 0 ? featuresData.items : [
+    { title: 'Fast & Efficient', description: 'Quick turnaround without compromise' },
+    { title: 'Transparent', description: 'Clear reporting always' },
+    { title: 'Dedicated Team', description: 'Your own support squad' },
+  ]
+  const stats = statsData.items?.length > 0 ? statsData.items : [
+    { number: '500+', label: 'Projects Completed' },
+    { number: '98%', label: 'Client Satisfaction' },
+    { number: '150+', label: 'Happy Clients' },
+    { number: '12+', label: 'Years Experience' },
   ]
 
   return (
     <div ref={containerRef} className="min-h-screen" style={{backgroundColor: bgColor, color: textPrimary}}>
-      <Navigation />
+      <Navigation navLogo={navLogo} navLinks={navLinks} />
 
       {/* Hero Section - 3D Floating Shapes Design */}
       <header className="relative min-h-screen flex items-center pt-32 pb-20 px-6 lg:px-16 overflow-hidden">
@@ -97,7 +137,6 @@ export default function Home() {
             transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
             style={{top: '35%', right: '25%'}}
           />
-          {/* Extra 3D Elements */}
           <motion.div 
             className="float-shape"
             style={{
@@ -146,18 +185,18 @@ export default function Home() {
               </span>
               
               <h1 className="text-display mb-6" style={{color: textPrimary}}>
-                Transform<br />
-                <span className="gradient-text-corporate">Your Digital</span><br />
-                <span>Presence</span>
+                {heroTitle.split(' ').map((word, i) => (
+                  <span key={i}>{word}{i < heroTitle.split(' ').length - 1 ? ' ' : ''}</span>
+                ))}
               </h1>
               
               <p className="text-body max-w-lg mb-10" style={{color: textSecondary}}>
-                Strategic digital marketing that drives measurable growth. We don't just market—we build lasting connections with your audience.
+                {heroSubtitle}
               </p>
               
               <div className="flex flex-wrap gap-4">
-                <Link href="/#contact" className="btn-corporate flex items-center gap-2">
-                  Start Your Project <ArrowRight size={18} />
+                <Link href={heroData.ctaLink || '/#contact'} className="btn-corporate flex items-center gap-2">
+                  {heroCta} <ArrowRight size={18} />
                 </Link>
                 <Link href="/portfolio" className="btn-outline-corporate flex items-center gap-2">
                   View Our Work <ChevronRight size={18} />
@@ -168,7 +207,6 @@ export default function Home() {
             {/* Hero Visual - 3D Floating Shapes Container */}
             <div className="hidden lg:flex justify-end items-center relative h-full">
               <div className="relative w-[500px] h-[500px]">
-                {/* Large Circle with 3D Effect */}
                 <motion.div 
                   animate={{ y: [0, -25, 0] }}
                   transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
@@ -192,7 +230,6 @@ export default function Home() {
                   </div>
                 </motion.div>
 
-                {/* Small Floating Circle */}
                 <motion.div 
                   animate={{ y: [0, 20, 0], x: [0, 10, 0] }}
                   transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
@@ -208,7 +245,6 @@ export default function Home() {
                   </div>
                 </motion.div>
 
-                {/* Medium Organic Shape */}
                 <motion.div 
                   animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
                   transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
@@ -223,7 +259,6 @@ export default function Home() {
                   </div>
                 </motion.div>
 
-                {/* Floating Gold Accent Badge */}
                 <motion.div 
                   animate={{ y: [0, 25, 0], scale: [1, 1.1, 1] }}
                   transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
@@ -236,7 +271,6 @@ export default function Home() {
                   <div className="text-xl font-bold" style={{color: '#2C3947'}}>+500 Projects</div>
                 </motion.div>
 
-                {/* Additional Floating Elements */}
                 <motion.div 
                   animate={{ y: [0, -10, 0], x: [0, -15, 0] }}
                   transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -277,12 +311,7 @@ export default function Home() {
             </div>
             <div className="lg:col-span-3">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { number: '500+', label: 'Projects Completed' },
-                  { number: '98%', label: 'Client Satisfaction' },
-                  { number: '150+', label: 'Happy Clients' },
-                  { number: '12+', label: 'Years Experience' },
-                ].map((stat, i) => (
+                {stats.map((stat, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -357,10 +386,10 @@ export default function Home() {
               >
                 <div className="card-corporate h-full group">
                   <div className="w-14 h-14 rounded-xl mb-6 flex items-center justify-center transition-transform group-hover:scale-110" style={{background: 'linear-gradient(135deg, #C2A56D, #D4B87A)'}}>
-                    <feature.icon className="text-white" size={24} />
+                    <span className="text-white text-lg font-bold">{feature.title?.charAt(0) || '✓'}</span>
                   </div>
                   <h3 className="text-xl font-bold mb-3" style={{color: textPrimary}}>{feature.title}</h3>
-                  <p style={{color: textSecondary}}>{feature.desc}</p>
+                  <p style={{color: textSecondary}}>{feature.description || feature.desc}</p>
                 </div>
               </motion.div>
             ))}
