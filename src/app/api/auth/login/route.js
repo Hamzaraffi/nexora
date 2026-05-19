@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server'
-import crypto from 'crypto'
-import { kvGet, KV_KEYS } from '@/lib/kv-store'
-import { initDefaultData } from '@/lib/init-data'
+import { kvGet, kvSet } from '@/lib/kv-store'
+import { verifyPassword } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
-
-function hashPassword(password, salt) {
-  return crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex')
-}
 
 export async function POST(request) {
   try {
@@ -17,33 +12,36 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 })
     }
 
-    await initDefaultData()
-    
-    const adminUser = await kvGet(KV_KEYS.ADMIN_USER)
-    if (!adminUser) {
+    let users = await kvGet('users')
+    if (!users || !Array.isArray(users) || users.length === 0) {
+      return NextResponse.json({ error: 'No users configured. Please set up your first admin account.' }, { status: 401 })
+    }
+
+    const user = users.find(u => u.email === email)
+    if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
     let valid = false
-    if (adminUser.salt) {
-      valid = adminUser.password === hashPassword(password, adminUser.salt)
+    if (user.salt) {
+      valid = verifyPassword(password, user.password, user.salt)
     } else {
-      valid = adminUser.password === password
+      valid = user.password === password
     }
 
-    if (valid && adminUser.email === email) {
-      return NextResponse.json({
-        success: true,
-        user: {
-          id: adminUser.id,
-          name: adminUser.name,
-          email: adminUser.email,
-          role: adminUser.role
-        }
-      })
+    if (!valid) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    })
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })

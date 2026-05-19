@@ -59,7 +59,6 @@ export async function kvDel(key) {
 }
 
 export const KV_KEYS = {
-  ADMIN_USER: 'admin:user',
   PAGES: 'pages',
   MESSAGES: 'messages',
   SECTIONS: 'sections',

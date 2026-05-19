@@ -4,15 +4,6 @@ export async function initDefaultData() {
   const initComplete = await kvGet(KV_KEYS.INIT_COMPLETE)
   if (initComplete) return true
 
-  await kvSet(KV_KEYS.ADMIN_USER, {
-    id: 'admin-1',
-    email: 'admin@nexora.com',
-    password: 'nexora2024',
-    name: 'Admin',
-    role: 'admin',
-    createdAt: new Date().toISOString(),
-  })
-
   const defaultPages = [
     {
       id: 'page-home',

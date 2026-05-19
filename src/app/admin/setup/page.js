@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function LoginPage() {
+export default function SetupPage() {
   const router = useRouter()
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,33 +16,43 @@ export default function LoginPage() {
     fetch('/api/users')
       .then(r => r.json())
       .then(users => {
-        if (Array.isArray(users) && users.length === 0) {
-          router.push('/admin/setup')
+        if (Array.isArray(users) && users.length > 0) {
+          router.push('/admin/login')
         }
         setChecking(false)
       })
       .catch(() => setChecking(false))
   }, [])
 
-  async function handleLogin(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
     setError('')
 
+    if (!name || !email || !password) {
+      setError('All fields are required')
+      setLoading(false)
+      return
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters')
+      setLoading(false)
+      return
+    }
+
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ name, email, password, role: 'admin' })
       })
       const data = await res.json()
 
-      if (res.ok && data.success) {
-        localStorage.setItem('nexora_user', JSON.stringify(data.user))
-        localStorage.setItem('nexora_auth', 'true')
-        router.push('/admin/dashboard')
+      if (res.ok) {
+        router.push('/admin/login')
       } else {
-        setError(data.error || 'Invalid credentials')
+        setError(data.error || 'Failed to create admin account')
         setLoading(false)
       }
     } catch (err) {
@@ -98,11 +109,33 @@ export default function LoginPage() {
             fontSize: '28px',
             fontWeight: 'bold'
           }}>N</div>
-          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#1A2634', margin: '0 0 8px' }}>Nexora Admin</h1>
-          <p style={{ color: '#6B7280', margin: 0 }}>Sign in to your dashboard</p>
+          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#1A2634', margin: '0 0 8px' }}>Set Up Nexora</h1>
+          <p style={{ color: '#6B7280', margin: 0 }}>Create your first admin account</p>
         </div>
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Admin Name"
+              style={{ 
+                width: '100%', 
+                padding: '14px 16px', 
+                border: '2px solid #E5E7EB', 
+                borderRadius: '10px',
+                fontSize: '15px',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
               Email Address
@@ -112,6 +145,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              placeholder="admin@example.com"
               style={{ 
                 width: '100%', 
                 padding: '14px 16px', 
@@ -133,6 +167,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              placeholder="Min. 6 characters"
               style={{ 
                 width: '100%', 
                 padding: '14px 16px', 
@@ -176,10 +211,9 @@ export default function LoginPage() {
               opacity: loading ? 0.7 : 1
             }}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Creating Account...' : 'Create Admin Account'}
           </button>
         </form>
-
       </div>
     </div>
   )

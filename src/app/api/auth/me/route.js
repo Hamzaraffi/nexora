@@ -1,29 +1,32 @@
 import { NextResponse } from 'next/server'
-
-const DEMO_USER = {
-  id: 'admin-001',
-  name: 'Admin User',
-  email: 'admin@nexora.com',
-  password: 'nexora2024',
-  role: 'admin'
-}
+import { kvGet } from '@/lib/kv-store'
 
 export async function GET(request) {
   const authHeader = request.headers.get('authorization')
   const cookieToken = request.cookies.get('auth_token')?.value
   const token = authHeader?.replace('Bearer ', '') || cookieToken
 
-  if (token === 'nexora_admin_token_2024') {
-    return NextResponse.json({
-      authenticated: true,
-      user: {
-        id: DEMO_USER.id,
-        name: DEMO_USER.name,
-        email: DEMO_USER.email,
-        role: DEMO_USER.role
-      }
-    })
+  if (!token) {
+    return NextResponse.json({ authenticated: false }, { status: 401 })
   }
 
-  return NextResponse.json({ authenticated: false }, { status: 401 })
+  const users = await kvGet('users')
+  if (!users || !Array.isArray(users)) {
+    return NextResponse.json({ authenticated: false }, { status: 401 })
+  }
+
+  const user = users.find(u => u.id.toString() === token)
+  if (!user) {
+    return NextResponse.json({ authenticated: false }, { status: 401 })
+  }
+
+  return NextResponse.json({
+    authenticated: true,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    }
+  })
 }
