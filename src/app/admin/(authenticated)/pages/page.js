@@ -118,74 +118,76 @@ export default function PagesList() {
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           border: '1px solid #E5E7EB'
         }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Page Name</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>URL Path</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Sections</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pages.map((page) => (
-                <tr key={page.id} style={{ borderBottom: '1px solid #E5E7EB' }}>
-                  <td style={{ padding: '20px', fontWeight: '600', color: '#1A2634' }}>{page.title}</td>
-                  <td style={{ padding: '20px' }}>
-                    <code style={{ 
-                      background: '#F3F4F6', 
-                      padding: '6px 12px', 
-                      borderRadius: '6px', 
-                      color: '#C2A56D',
-                      fontSize: '13px',
-                      fontWeight: '500'
-                    }}>{page.path || '/' + page.slug}</code>
-                  </td>
-                  <td style={{ padding: '20px', color: '#6B7280' }}>
-                    <span style={{ 
-                      padding: '4px 10px', 
-                      background: '#E8EDF2', 
-                      borderRadius: '20px', 
-                      fontSize: '12px',
-                      fontWeight: '500'
-                    }}>{page.sections?.length || 0} sections</span>
-                  </td>
-                  <td style={{ padding: '20px' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <a href={`/admin/pages/${page.slug}`} style={{ 
-                        padding: '8px 16px', 
-                        background: '#C2A56D', 
-                        color: 'white', 
-                        borderRadius: '8px', 
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
+              <thead>
+                <tr style={{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Page Name</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>URL Path</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Sections</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pages.map((page) => (
+                  <tr key={page.id} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                    <td style={{ padding: '20px', fontWeight: '600', color: '#1A2634' }}>{page.title}</td>
+                    <td style={{ padding: '20px' }}>
+                      <code style={{ 
+                        background: '#F3F4F6', 
+                        padding: '6px 12px', 
+                        borderRadius: '6px', 
+                        color: '#C2A56D',
                         fontSize: '13px',
-                        fontWeight: '500',
-                        textDecoration: 'none',
-                        display: 'inline-block'
-                      }}>Edit Page</a>
-                      <button 
-                        onClick={async () => {
-                          if (confirm('Delete this page?')) {
-                            await fetch(`/api/pages?id=${page.id}`, { method: 'DELETE' })
-                            loadPages()
-                          }
-                        }}
-                        style={{ 
+                        fontWeight: '500'
+                      }}>{page.path || '/' + page.slug}</code>
+                    </td>
+                    <td style={{ padding: '20px', color: '#6B7280' }}>
+                      <span style={{ 
+                        padding: '4px 10px', 
+                        background: '#E8EDF2', 
+                        borderRadius: '20px', 
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}>{page.sections?.length || 0} sections</span>
+                    </td>
+                    <td style={{ padding: '20px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <a href={`/admin/pages/${page.slug}`} style={{ 
                           padding: '8px 16px', 
-                          background: '#FEE2E2', 
-                          color: '#DC2626', 
-                          border: 'none',
+                          background: '#C2A56D', 
+                          color: 'white', 
                           borderRadius: '8px', 
                           fontSize: '13px',
                           fontWeight: '500',
-                          cursor: 'pointer'
-                        }}
-                      >Delete</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                          textDecoration: 'none',
+                          display: 'inline-block'
+                        }}>Edit Page</a>
+                        <button 
+                          onClick={async () => {
+                            if (confirm('Delete this page?')) {
+                              await fetch(`/api/pages?id=${page.id}`, { method: 'DELETE' })
+                              loadPages()
+                            }
+                          }}
+                          style={{ 
+                            padding: '8px 16px', 
+                            background: '#FEE2E2', 
+                            color: '#DC2626', 
+                            border: 'none',
+                            borderRadius: '8px', 
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                          }}
+                        >Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : null}
     </div>

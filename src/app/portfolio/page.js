@@ -105,7 +105,7 @@ export default function PortfolioPage() {
                     </div>
                     <p className="text-3xl font-bold mb-4 gradient-text-corporate">{item.results}</p>
                     
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {Object.entries(item.metrics || {}).map(([key, value]) => (
                         <div key={key} className="text-center p-3 rounded-xl" style={{backgroundColor: bgColor}}>
                           <div className="text-2xl font-bold" style={{color: accent}}>{value}</div>

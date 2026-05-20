@@ -111,7 +111,8 @@ export default function UsersPage() {
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
         border: '1px solid #E5E7EB'
       }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
           <thead>
             <tr style={{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
               <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Name</th>
@@ -166,6 +167,7 @@ export default function UsersPage() {
             ))}
           </tbody>
         </table>
+          </div>
       </div>
 
       {showForm && (

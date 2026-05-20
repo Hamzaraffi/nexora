@@ -81,14 +81,14 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         <StatCard icon="📄" label="Pages" value={stats.pages} sub="Website pages" color="#3B82F6" />
         <StatCard icon="📝" label="Blog Posts" value={stats.blogs} sub={`${stats.publishedBlogs} published`} color="#8B5CF6" />
         <StatCard icon="📁" label="Case Studies" value={stats.caseStudies} sub={`${stats.featuredCases} featured`} color="#059669" />
         <StatCard icon="👥" label="Team Members" value={stats.users} sub="Active users" color="#C2A56D" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         <div style={{ background: 'white', borderRadius: '16px', padding: '28px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #E5E7EB' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ 
@@ -167,7 +167,7 @@ export default function AnalyticsPage() {
         border: '1px solid #E5E7EB'
       }}>
         <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1A2634', marginBottom: '24px' }}>Content Distribution</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '24px' }}>
           <div style={{ textAlign: 'center', padding: '24px', background: '#F9FAFB', borderRadius: '12px' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>📄</div>
             <div style={{ fontSize: '28px', fontWeight: '700', color: '#3B82F6' }}>{stats.pages}</div>

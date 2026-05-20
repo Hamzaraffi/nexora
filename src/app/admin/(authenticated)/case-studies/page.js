@@ -100,72 +100,74 @@ export default function CaseStudiesList() {
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           border: '1px solid #E5E7EB'
         }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Project</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Client</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cases.map((item) => (
-                <tr key={item.id} style={{ borderBottom: '1px solid #E5E7EB' }}>
-                  <td style={{ padding: '20px', fontWeight: '600', color: '#1A2634' }}>{item.title}</td>
-                  <td style={{ padding: '20px', color: '#6B7280' }}>{item.client || '-'}</td>
-                  <td style={{ padding: '20px' }}>
-                    <span style={{ 
-                      padding: '4px 10px', 
-                      background: item.featured ? '#D1FAE5' : '#F3F4F6',
-                      color: item.featured ? '#059669' : '#6B7280',
-                      borderRadius: '20px', 
-                      fontSize: '12px',
-                      fontWeight: '500'
-                    }}>{item.featured ? 'Featured' : 'Draft'}</span>
-                  </td>
-                  <td style={{ padding: '20px' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button 
-                        onClick={() => togglePublish(item.id, item.featured)}
-                        style={{ 
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
+              <thead>
+                <tr style={{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Project</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Client</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cases.map((item) => (
+                  <tr key={item.id} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                    <td style={{ padding: '20px', fontWeight: '600', color: '#1A2634' }}>{item.title}</td>
+                    <td style={{ padding: '20px', color: '#6B7280' }}>{item.client || '-'}</td>
+                    <td style={{ padding: '20px' }}>
+                      <span style={{ 
+                        padding: '4px 10px', 
+                        background: item.featured ? '#D1FAE5' : '#F3F4F6',
+                        color: item.featured ? '#059669' : '#6B7280',
+                        borderRadius: '20px', 
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}>{item.featured ? 'Featured' : 'Draft'}</span>
+                    </td>
+                    <td style={{ padding: '20px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          onClick={() => togglePublish(item.id, item.featured)}
+                          style={{ 
+                            padding: '8px 12px', 
+                            background: item.featured ? '#FEF3C7' : '#D1FAE5', 
+                            color: item.featured ? '#D97706' : '#059669',
+                            border: 'none', 
+                            borderRadius: '6px', 
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            fontWeight: '500'
+                          }}
+                        >
+                          {item.featured ? 'Unfeature' : 'Feature'}
+                        </button>
+                        <a href={`/admin/case-studies/${item.id}`} style={{ 
                           padding: '8px 12px', 
-                          background: item.featured ? '#FEF3C7' : '#D1FAE5', 
-                          color: item.featured ? '#D97706' : '#059669',
+                          background: '#3B82F6', 
+                          color: 'white', 
+                          borderRadius: '6px', 
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          textDecoration: 'none'
+                        }}>Edit</a>
+                        <button onClick={() => deleteCase(item.id)} style={{ 
+                          padding: '8px 12px', 
+                          background: '#FEE2E2', 
+                          color: '#DC2626', 
                           border: 'none', 
                           borderRadius: '6px', 
                           fontSize: '12px',
                           cursor: 'pointer',
                           fontWeight: '500'
-                        }}
-                      >
-                        {item.featured ? 'Unfeature' : 'Feature'}
-                      </button>
-                      <a href={`/admin/case-studies/${item.id}`} style={{ 
-                        padding: '8px 12px', 
-                        background: '#3B82F6', 
-                        color: 'white', 
-                        borderRadius: '6px', 
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        textDecoration: 'none'
-                      }}>Edit</a>
-                      <button onClick={() => deleteCase(item.id)} style={{ 
-                        padding: '8px 12px', 
-                        background: '#FEE2E2', 
-                        color: '#DC2626', 
-                        border: 'none', 
-                        borderRadius: '6px', 
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        fontWeight: '500'
-                      }}>Delete</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        }}>Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

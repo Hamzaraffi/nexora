@@ -100,74 +100,76 @@ export default function BlogList() {
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           border: '1px solid #E5E7EB'
         }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Title</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Author</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Date</th>
-                <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {blogs.map((blog) => (
-                <tr key={blog.id} style={{ borderBottom: '1px solid #E5E7EB' }}>
-                  <td style={{ padding: '20px', fontWeight: '600', color: '#1A2634' }}>{blog.title}</td>
-                  <td style={{ padding: '20px', color: '#6B7280' }}>{blog.author || 'Admin'}</td>
-                  <td style={{ padding: '20px' }}>
-                    <span style={{ 
-                      padding: '4px 10px', 
-                      background: blog.published ? '#D1FAE5' : '#FEF3C7',
-                      color: blog.published ? '#059669' : '#D97706',
-                      borderRadius: '20px', 
-                      fontSize: '12px',
-                      fontWeight: '500'
-                    }}>{blog.published ? 'Published' : 'Draft'}</span>
-                  </td>
-                  <td style={{ padding: '20px', color: '#6B7280', fontSize: '14px' }}>{blog.date || blog.createdAt}</td>
-                  <td style={{ padding: '20px' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button 
-                        onClick={() => togglePublish(blog.id, blog.published)}
-                        style={{ 
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
+              <thead>
+                <tr style={{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Title</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Author</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Status</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Date</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: '600', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {blogs.map((blog) => (
+                  <tr key={blog.id} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                    <td style={{ padding: '20px', fontWeight: '600', color: '#1A2634' }}>{blog.title}</td>
+                    <td style={{ padding: '20px', color: '#6B7280' }}>{blog.author || 'Admin'}</td>
+                    <td style={{ padding: '20px' }}>
+                      <span style={{ 
+                        padding: '4px 10px', 
+                        background: blog.published ? '#D1FAE5' : '#FEF3C7',
+                        color: blog.published ? '#059669' : '#D97706',
+                        borderRadius: '20px', 
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}>{blog.published ? 'Published' : 'Draft'}</span>
+                    </td>
+                    <td style={{ padding: '20px', color: '#6B7280', fontSize: '14px' }}>{blog.date || blog.createdAt}</td>
+                    <td style={{ padding: '20px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          onClick={() => togglePublish(blog.id, blog.published)}
+                          style={{ 
+                            padding: '8px 12px', 
+                            background: blog.published ? '#FEF3C7' : '#D1FAE5', 
+                            color: blog.published ? '#D97706' : '#059669',
+                            border: 'none', 
+                            borderRadius: '6px', 
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            fontWeight: '500'
+                          }}
+                        >
+                          {blog.published ? 'Unpublish' : 'Publish'}
+                        </button>
+                        <a href={`/admin/blog/${blog.id}`} style={{ 
                           padding: '8px 12px', 
-                          background: blog.published ? '#FEF3C7' : '#D1FAE5', 
-                          color: blog.published ? '#D97706' : '#059669',
+                          background: '#3B82F6', 
+                          color: 'white', 
+                          borderRadius: '6px', 
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          textDecoration: 'none'
+                        }}>Edit</a>
+                        <button onClick={() => deleteBlog(blog.id)} style={{ 
+                          padding: '8px 12px', 
+                          background: '#FEE2E2', 
+                          color: '#DC2626', 
                           border: 'none', 
                           borderRadius: '6px', 
                           fontSize: '12px',
                           cursor: 'pointer',
                           fontWeight: '500'
-                        }}
-                      >
-                        {blog.published ? 'Unpublish' : 'Publish'}
-                      </button>
-                      <a href={`/admin/blog/${blog.id}`} style={{ 
-                        padding: '8px 12px', 
-                        background: '#3B82F6', 
-                        color: 'white', 
-                        borderRadius: '6px', 
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        textDecoration: 'none'
-                      }}>Edit</a>
-                      <button onClick={() => deleteBlog(blog.id)} style={{ 
-                        padding: '8px 12px', 
-                        background: '#FEE2E2', 
-                        color: '#DC2626', 
-                        border: 'none', 
-                        borderRadius: '6px', 
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        fontWeight: '500'
-                      }}>Delete</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        }}>Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
