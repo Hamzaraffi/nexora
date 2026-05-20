@@ -2,12 +2,19 @@ import { NextResponse } from 'next/server'
 import { kvGet, kvSet } from '@/lib/kv-store'
 import { defaultBlogs } from '@/lib/default-data'
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
     let blogs = await kvGet('blogs')
     if (!blogs) {
       blogs = defaultBlogs
       await kvSet('blogs', blogs)
+    }
+    if (id) {
+      const blog = blogs.find(b => String(b.id) === String(id))
+      if (!blog) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json(blog)
     }
     return NextResponse.json(blogs)
   } catch (e) {
@@ -42,7 +49,7 @@ export async function PUT(request) {
     const body = await request.json()
     let blogs = await kvGet('blogs') || [...defaultBlogs]
     
-    const index = blogs.findIndex(b => b.id === body.id || (typeof b.id === 'string' && b.id === body.id))
+    const index = blogs.findIndex(b => String(b.id) === String(body.id))
     if (index !== -1) {
       blogs[index] = { ...blogs[index], ...body }
       await kvSet('blogs', blogs)

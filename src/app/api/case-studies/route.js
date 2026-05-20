@@ -2,12 +2,19 @@ import { NextResponse } from 'next/server'
 import { kvGet, kvSet } from '@/lib/kv-store'
 import { defaultPortfolio } from '@/lib/default-data'
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
     let cases = await kvGet('case-studies')
     if (!cases) {
       cases = defaultPortfolio
       await kvSet('case-studies', cases)
+    }
+    if (id) {
+      const item = cases.find(c => String(c.id) === String(id))
+      if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json(item)
     }
     return NextResponse.json(cases)
   } catch (e) {
@@ -40,7 +47,7 @@ export async function PUT(request) {
     const body = await request.json()
     let cases = await kvGet('case-studies') || [...defaultPortfolio]
     
-    const index = cases.findIndex(c => c.id === body.id)
+    const index = cases.findIndex(c => String(c.id) === String(body.id))
     if (index !== -1) {
       cases[index] = { ...cases[index], ...body }
       await kvSet('case-studies', cases)
