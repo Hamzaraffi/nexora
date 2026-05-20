@@ -59,8 +59,8 @@ export default function Navigation({ navLogo = 'Nexora', navLinks = null }) {
   }
 
   const overlayVariants = {
-    closed: { opacity: 0, display: 'none' },
-    open: { opacity: 1, display: 'block' }
+    closed: { opacity: 0 },
+    open: { opacity: 1 }
   }
 
   const linkVariants = {
@@ -289,7 +289,7 @@ export default function Navigation({ navLogo = 'Nexora', navLinks = null }) {
       </motion.nav>
 
       {/* Sidebar Overlay */}
-      <AnimatePresence>
+      <AnimatePresence mode="sync">
         {sidebarOpen && (
           <motion.div
             variants={overlayVariants}
@@ -304,7 +304,7 @@ export default function Navigation({ navLogo = 'Nexora', navLinks = null }) {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <AnimatePresence>
+      <AnimatePresence mode="sync">
         {sidebarOpen && (
           <motion.aside
             variants={sidebarVariants}
@@ -371,6 +371,7 @@ export default function Navigation({ navLogo = 'Nexora', navLinks = null }) {
                     {/* Active indicator */}
                     {pathname === item.href && (
                       <motion.div
+                        layout
                         layoutId="sidebarActive"
                         className="absolute left-0 w-1 h-6 rounded-r-full"
                         style={{ backgroundColor: accent }}

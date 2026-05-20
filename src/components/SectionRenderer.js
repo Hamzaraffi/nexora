@@ -21,9 +21,9 @@ export default function SectionRenderer({ section, index }) {
     )
   }
 
-  const content = typeof section.content === 'string' 
-    ? JSON.parse(section.content || '{}') 
-    : section.content
+  const content = typeof section.content === 'string' && section.content.trim()
+    ? JSON.parse(section.content)
+    : (section.content || {})
 
   return (
     <motion.div
@@ -105,7 +105,7 @@ function CardGridSection({ content }) {
           </h2>
         )}
         
-        <div className={`grid grid-cols-1 md:grid-cols-${Math.min(columns, 3)} gap-8`}>
+        <div className={`grid grid-cols-1 gap-8 ${columns >= 2 ? 'md:grid-cols-2' : ''} ${columns >= 3 ? 'lg:grid-cols-3' : ''}`}>
           {(content.cards || []).map((card, i) => (
             <motion.div
               key={i}

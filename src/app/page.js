@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { motion, useScroll, useSpring } from 'framer-motion'
+import { motion } from 'framer-motion'
 import Navigation from '../components/Navigation'
 import Footer from '../components/Footer'
 import { useTheme } from '../components/ThemeProvider'
@@ -22,8 +22,6 @@ export default function Home() {
   const [cmsLoaded, setCmsLoaded] = useState(false)
   
   const containerRef = useRef(null)
-  const { scrollYProgress } = useScroll()
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 })
 
   useEffect(() => {
     async function loadCMSData() {
