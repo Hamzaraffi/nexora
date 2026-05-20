@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function CreateCaseStudy() {
@@ -8,7 +8,9 @@ export default function CreateCaseStudy() {
   const [loading, setLoading] = useState(false)
   const [preview, setPreview] = useState('')
   const [images, setImages] = useState([])
+  const [error, setError] = useState('')
   const editorRef = useRef(null)
+  const initialContentSet = useRef(false)
 
   const [form, setForm] = useState({
     title: '',
@@ -21,6 +23,13 @@ export default function CreateCaseStudy() {
     image: '',
     featured: false
   })
+
+  useEffect(() => {
+    if (!initialContentSet.current && editorRef.current) {
+      editorRef.current.innerHTML = ''
+      initialContentSet.current = true
+    }
+  }, [])
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target
@@ -78,6 +87,8 @@ export default function CreateCaseStudy() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    setError('')
+    const description = editorRef.current?.innerHTML || ''
     setLoading(true)
     try {
       const res = await fetch('/api/case-studies', {
@@ -85,11 +96,19 @@ export default function CreateCaseStudy() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          description,
           images
         })
       })
-      if (res.ok) router.push('/admin/case-studies')
-    } catch (e) {}
+      if (res.ok) {
+        router.push('/admin/case-studies')
+        return
+      }
+      const data = await res.json().catch(() => ({}))
+      setError(data.error || 'Failed to create case study.')
+    } catch (e) {
+      setError('Network error. Please try again.')
+    }
     setLoading(false)
   }
 
@@ -130,7 +149,7 @@ export default function CreateCaseStudy() {
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Description</label>
                 <div style={{ border: '2px solid #E5E7EB', borderRadius: '10px', overflow: 'hidden' }}>
                   {createEditorToolbar('desc')}
-                  <div ref={editorRef} contentEditable style={{ minHeight: '150px', padding: '16px', fontSize: '15px', lineHeight: '1.6', outline: 'none', fontFamily: 'inherit' }} dangerouslySetInnerHTML={{ __html: form.description }} />
+                   <div ref={editorRef} contentEditable suppressContentEditableWarning style={{ minHeight: '150px', padding: '16px', fontSize: '15px', lineHeight: '1.6', outline: 'none', fontFamily: 'inherit' }} />
                 </div>
               </div>
 
@@ -158,6 +177,11 @@ export default function CreateCaseStudy() {
                 <input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
                 <span style={{ fontSize: '14px', fontWeight: '500' }}>Feature this project</span>
               </label>
+              {error && (
+                <div style={{ background: '#FEF2F2', color: '#DC2626', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', border: '1px solid #FECACA' }}>
+                  {error}
+                </div>
+              )}
               <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#C2A56D', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
                 {loading ? 'Creating...' : 'Create Case Study'}
               </button>

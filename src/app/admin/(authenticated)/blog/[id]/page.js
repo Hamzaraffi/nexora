@@ -11,7 +11,9 @@ export default function EditBlog() {
   const [uploading, setUploading] = useState(false)
   const [images, setImages] = useState([])
   const [preview, setPreview] = useState('')
+  const [error, setError] = useState('')
   const editorRef = useRef(null)
+  const contentLoaded = useRef(false)
 
   const [form, setForm] = useState({
     title: '', slug: '', content: '', author: '', excerpt: '', category: '', tags: '', image: '', published: false
@@ -32,6 +34,13 @@ export default function EditBlog() {
     }
     load()
   }, [params.id])
+
+  useEffect(() => {
+    if (form.content && editorRef.current && !contentLoaded.current) {
+      editorRef.current.innerHTML = form.content
+      contentLoaded.current = true
+    }
+  }, [form.content])
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target
@@ -69,9 +78,10 @@ export default function EditBlog() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    setError('')
+    const content = editorRef.current?.innerHTML || ''
     setSaving(true)
     try {
-      const content = editorRef.current?.innerHTML || form.content
       const res = await fetch('/api/blogs', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -83,8 +93,15 @@ export default function EditBlog() {
           tags: form.tags.split(',').map(t => t.trim()).filter(Boolean)
         })
       })
-      if (res.ok) router.push('/admin/blog')
-    } catch (e) {}
+      if (res.ok) {
+        router.push('/admin/blog')
+        return
+      }
+      const data = await res.json().catch(() => ({}))
+      setError(data.error || 'Failed to save. Check that content/images are not too large.')
+    } catch (e) {
+      setError('Network error. Please try again.')
+    }
     setSaving(false)
   }
 
@@ -140,7 +157,7 @@ export default function EditBlog() {
                       <input type="file" accept="image/*" multiple onChange={handleImageAdd} style={{ display: 'none' }} />
                     </label>
                   </div>
-                  <div ref={editorRef} contentEditable style={{ minHeight: '300px', padding: '16px', fontSize: '15px', lineHeight: '1.7', outline: 'none', fontFamily: 'inherit' }} dangerouslySetInnerHTML={{ __html: form.content }} />
+                   <div ref={editorRef} contentEditable suppressContentEditableWarning style={{ minHeight: '300px', padding: '16px', fontSize: '15px', lineHeight: '1.7', outline: 'none', fontFamily: 'inherit' }} />
                 </div>
               </div>
               <div>
@@ -157,6 +174,11 @@ export default function EditBlog() {
                 <input type="checkbox" name="published" checked={form.published} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
                 <span style={{ fontSize: '14px', fontWeight: '500' }}>Published</span>
               </label>
+              {error && (
+                <div style={{ background: '#FEF2F2', color: '#DC2626', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', border: '1px solid #FECACA' }}>
+                  {error}
+                </div>
+              )}
               <button type="submit" disabled={saving} style={{ width: '100%', padding: '14px', background: '#C2A56D', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>

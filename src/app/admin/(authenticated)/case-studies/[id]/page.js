@@ -10,7 +10,9 @@ export default function EditCaseStudy() {
   const [saving, setSaving] = useState(false)
   const [preview, setPreview] = useState('')
   const [images, setImages] = useState([])
+  const [error, setError] = useState('')
   const editorRef = useRef(null)
+  const contentLoaded = useRef(false)
 
   const [form, setForm] = useState({
     title: '', client: '', category: '', description: '', challenge: '', solution: '', results: '', image: '', featured: false
@@ -31,6 +33,13 @@ export default function EditCaseStudy() {
     }
     load()
   }, [params.id])
+
+  useEffect(() => {
+    if (form.description && editorRef.current && !contentLoaded.current) {
+      editorRef.current.innerHTML = form.description
+      contentLoaded.current = true
+    }
+  }, [form.description])
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target
@@ -88,15 +97,24 @@ export default function EditCaseStudy() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    setError('')
+    const description = editorRef.current?.innerHTML || ''
     setSaving(true)
     try {
       const res = await fetch('/api/case-studies', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, id: params.id, images })
+        body: JSON.stringify({ ...form, description, id: params.id, images })
       })
-      if (res.ok) router.push('/admin/case-studies')
-    } catch (e) {}
+      if (res.ok) {
+        router.push('/admin/case-studies')
+        return
+      }
+      const data = await res.json().catch(() => ({}))
+      setError(data.error || 'Failed to save case study.')
+    } catch (e) {
+      setError('Network error. Please try again.')
+    }
     setSaving(false)
   }
 
@@ -138,7 +156,7 @@ export default function EditCaseStudy() {
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Description</label>
                 <div style={{ border: '2px solid #E5E7EB', borderRadius: '10px', overflow: 'hidden' }}>
                   {createEditorToolbar()}
-                  <div ref={editorRef} contentEditable style={{ minHeight: '150px', padding: '16px', fontSize: '15px', lineHeight: '1.6', outline: 'none', fontFamily: 'inherit' }} dangerouslySetInnerHTML={{ __html: form.description }} />
+                   <div ref={editorRef} contentEditable suppressContentEditableWarning style={{ minHeight: '150px', padding: '16px', fontSize: '15px', lineHeight: '1.6', outline: 'none', fontFamily: 'inherit' }} />
                 </div>
               </div>
               <div style={{ marginBottom: '20px' }}>
@@ -163,6 +181,11 @@ export default function EditCaseStudy() {
                 <input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
                 <span style={{ fontSize: '14px', fontWeight: '500' }}>Feature this project</span>
               </label>
+              {error && (
+                <div style={{ background: '#FEF2F2', color: '#DC2626', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', border: '1px solid #FECACA' }}>
+                  {error}
+                </div>
+              )}
               <button type="submit" disabled={saving} style={{ width: '100%', padding: '14px', background: '#C2A56D', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>

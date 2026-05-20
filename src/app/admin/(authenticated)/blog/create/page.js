@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function CreateBlog() {
@@ -9,8 +9,9 @@ export default function CreateBlog() {
   const [uploading, setUploading] = useState(false)
   const [images, setImages] = useState([])
   const [preview, setPreview] = useState('')
-  const [editorHtml, setEditorHtml] = useState('')
+  const [error, setError] = useState('')
   const editorRef = useRef(null)
+  const initialContentSet = useRef(false)
 
   const [form, setForm] = useState({
     title: '',
@@ -23,6 +24,13 @@ export default function CreateBlog() {
     image: '',
     published: false
   })
+
+  useEffect(() => {
+    if (!initialContentSet.current && editorRef.current) {
+      editorRef.current.innerHTML = ''
+      initialContentSet.current = true
+    }
+  }, [])
 
   function generateSlug(title) {
     return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -53,8 +61,7 @@ export default function CreateBlog() {
 
   function execCmd(command, value = null) {
     document.execCommand(command, false, value)
-    setEditorHtml(editorRef.current.innerHTML)
-    setForm({ ...form, content: editorRef.current.innerHTML })
+    editorRef.current?.focus()
   }
 
   function handleImageAdd(e) {
@@ -64,7 +71,6 @@ export default function CreateBlog() {
       reader.onloadend = () => {
         const imgHtml = `<img src="${reader.result}" style="max-width:100%;height:auto;border-radius:8px;margin:16px 0;" />`
         document.execCommand('insertHTML', false, imgHtml)
-        setEditorHtml(editorRef.current.innerHTML)
       }
       reader.readAsDataURL(file)
     })
@@ -72,7 +78,8 @@ export default function CreateBlog() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    const content = editorRef.current?.innerHTML || form.content
+    setError('')
+    const content = editorRef.current?.innerHTML || ''
     setLoading(true)
     
     try {
@@ -88,8 +95,15 @@ export default function CreateBlog() {
         })
       })
       
-      if (res.ok) router.push('/admin/blog')
-    } catch (e) {}
+      if (res.ok) {
+        router.push('/admin/blog')
+        return
+      }
+      const data = await res.json().catch(() => ({}))
+      setError(data.error || 'Failed to create post. Check that content/images are not too large.')
+    } catch (e) {
+      setError('Network error. Please try again.')
+    }
     setLoading(false)
   }
 
@@ -146,7 +160,7 @@ export default function CreateBlog() {
                   <div
                     ref={editorRef}
                     contentEditable
-                    onInput={() => setEditorHtml(editorRef.current.innerHTML)}
+                    suppressContentEditableWarning
                     style={{
                       minHeight: '300px',
                       padding: '16px',
@@ -155,7 +169,6 @@ export default function CreateBlog() {
                       outline: 'none',
                       fontFamily: 'inherit'
                     }}
-                    dangerouslySetInnerHTML={{ __html: form.content }}
                   />
                 </div>
               </div>
@@ -173,6 +186,11 @@ export default function CreateBlog() {
                 <input type="checkbox" name="published" checked={form.published} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
                 <span style={{ fontSize: '14px', fontWeight: '500' }}>Publish immediately</span>
               </label>
+              {error && (
+                <div style={{ background: '#FEF2F2', color: '#DC2626', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '12px', border: '1px solid #FECACA' }}>
+                  {error}
+                </div>
+              )}
               <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: '#C2A56D', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
                 {loading ? 'Creating...' : 'Create Post'}
               </button>
