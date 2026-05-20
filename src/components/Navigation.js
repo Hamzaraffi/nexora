@@ -23,6 +23,16 @@ export default function Navigation({ navLogo = 'Nexora', navLinks = null }) {
       .catch(() => {})
   }, [])
 
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth >= 768 && sidebarOpen) {
+        setSidebarOpen(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [sidebarOpen])
+
   if (pathname?.startsWith('/admin')) return null
   
   const scaleX = useSpring(scrollYProgress, {
@@ -112,7 +122,7 @@ export default function Navigation({ navLogo = 'Nexora', navLinks = null }) {
           <div className="flex items-center gap-6">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="relative w-10 h-10 flex items-center justify-center group"
+              className="relative w-10 h-10 flex items-center justify-center group md:hidden"
               aria-label="Toggle menu"
             >
               <div className="relative w-6 h-4">
@@ -287,7 +297,7 @@ export default function Navigation({ navLogo = 'Nexora', navLinks = null }) {
             animate="open"
             exit="closed"
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[55] bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[55] bg-black/40 backdrop-blur-sm md:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -302,7 +312,7 @@ export default function Navigation({ navLogo = 'Nexora', navLinks = null }) {
             animate="open"
             exit="closed"
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 bottom-0 z-[56] w-80 overflow-hidden"
+            className="fixed top-0 left-0 bottom-0 z-[56] w-80 overflow-hidden md:hidden"
             style={{
               backgroundColor: darkMode ? 'rgba(26, 38, 52, 0.98)' : 'rgba(255, 255, 255, 0.98)',
               backdropFilter: 'blur(20px)',
